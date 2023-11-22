@@ -1,0 +1,76 @@
+script:
+  code: |
+    def main(ctx, metadata):
+        ruleset_action = {"Reject": "AdBlock",
+            "Special": "DIRECT",
+            "Netflix": "Netflix",
+            "Spotify": "Spotify",
+            "YouTube": "YouTube",
+            "Disney Plus": "Disney",
+            "Bilibili": "AsianTV",
+            "iQiyi": "AsianTV",
+            "Letv": "AsianTV",
+            "Netease Music": "AsianTV",
+            "Tencent Video": "AsianTV",
+            "Youku": "AsianTV",
+            "WeTV": "AsianTV",
+            "ABC": "GlobalTV",
+            "Abema TV": "GlobalTV",
+            "Amazon": "GlobalTV",
+            "Apple News": "GlobalTV",
+            "Apple TV": "GlobalTV",
+            "Bahamut": "GlobalTV",
+            "BBC iPlayer": "GlobalTV",
+            "DAZN": "GlobalTV",
+            "Discovery Plus": "GlobalTV",
+            "encoreTVB": "GlobalTV",
+            "Fox Now": "GlobalTV",
+            "Fox+": "GlobalTV",
+            "HBO": "GlobalTV",
+            "Hulu Japan": "GlobalTV",
+            "Hulu": "GlobalTV",
+            "Japonx": "GlobalTV",
+            "JOOX": "GlobalTV",
+            "KKBOX": "GlobalTV",
+            "KKTV": "GlobalTV",
+            "Line TV": "GlobalTV",
+            "myTV SUPER": "GlobalTV",
+            "Pandora": "GlobalTV",
+            "PBS": "GlobalTV",
+            "Pornhub": "GlobalTV",
+            "Soundcloud": "GlobalTV",
+            "ViuTV": "GlobalTV",
+            "Telegram": "Telegram",
+            "Steam": "Steam",
+            "Speedtest": "Speedtest",
+            "PayPal": "PayPal",
+            "Microsoft": "Microsoft",
+            "PROXY": "Proxy",
+            "Apple": "Apple",
+            "Scholar": "Scholar",
+            "Domestic": "Domestic",
+            "Domestic IPs": "Domestic",
+            "LAN": "DIRECT"
+          }
+        port = int(metadata["dst_port"])
+        if metadata["network"] == "UDP":
+            if port == 443:
+                ctx.log('[Script] matched QUIC traffic use reject')
+                return "REJECT"
+        port_list = [21, 22, 23, 53, 80, 123, 143, 194, 443, 465, 587, 853, 993, 995, 998, 2052, 2053, 2082, 2083, 2086, 2095, 2096, 5222, 5228, 5229, 5230, 8080, 8443, 8880, 8888, 8889]
+        if port not in port_list:
+            ctx.log('[Script] not common port use direct')
+            return "DIRECT"
+        if metadata["dst_ip"] == "":
+            metadata["dst_ip"] = ctx.resolve_ip(metadata["host"])
+        for ruleset in ruleset_action:
+            if ctx.rule_providers[ruleset].match(metadata):
+                return ruleset_action[ruleset]
+        if metadata["dst_ip"] == "":
+            return "DIRECT"
+        code = ctx.geoip(metadata["dst_ip"])
+        if code == "CN":
+            ctx.log('[Script] Geoip CN')
+            return "Domestic"
+        ctx.log('[Script] FINAL')
+        return "Others"
