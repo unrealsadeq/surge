@@ -6,6 +6,8 @@ var portRanges = [
   { start: 17000, end: 19301 },
   { start: 19303, end: 20100 }
 ];
+var portMatched = false;
+var port = $request.destPort;
 
 for (var i = 0; i < portRanges.length; i++) {
   var range = portRanges[i];
